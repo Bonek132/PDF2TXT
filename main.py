@@ -17,7 +17,8 @@ def drop(event):
     selected_file.set(file_patch)
 
 def choose_directory():
-    pass
+    directory = filedialog.askdirectory()
+    output_dir.set(directory)
 
 def start_conversion():
     pass

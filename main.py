@@ -5,6 +5,8 @@ from PyPDF2 import PdfReader
 import os
 import time
 
+
+
 def open_file():
     filepath = filedialog.askopenfilename(filetypes=[("PDF files","*.pdf"), ("All Files"),("*.*")])
     if filepath:
@@ -22,18 +24,44 @@ def choose_directory():
 
 def start_conversion():
     try:
-        pd_path = selected_file.get()
+        pdf_path = selected_file.get()
         if not pdf_path:
             messagebox.showerror("Error","PDF file not selected")
             return
         if not output_file.get():
             raise ValueError("output file name cannot be empty")
         output_dir_patch = output_dir.get()
+            
         
-        if not output_dir_patch:
+        progress['value'] = 0
+        output_path = os.patch.join(output_dir_patch,f"{output_file.get()}.txt")
+        with open(pdf_path,"rb") as pdf_file:
+            reader = PdfReader(pdf_file)
+            total_pages = len(reader.pages)
+            
+            with open(output_path,"w",encoding="utf-8") as text_file:
+                for i, page in enumerate (reader.pages):
+                    progress["value"] = ((i+1)/total_pages) *100
+                    root.update_idletasks()
+                    time.sleep(0.5)
+                    text = page.extract_text()
+                    
+                    if text:
+                        text_file.write(f"Page {i+1}\n {'=' *20}\n")
+                        text_file.write(text)
+                        text_file.write("\n\n")
+                        
+                        messagebox.showinfo("Success","File converted successfully!!")
+        
+        if not output_dir_path:
             messagebox.showerror("Error","No output directory selected")
+            return
     except Exception as e:
         messagebox.showerror("Error",str(e))
+    
+    
+   
+    
     
 #
 #
@@ -67,4 +95,6 @@ open_button.pack()
 
 convert_button = tk.Button(root, text="Convert", command=start_conversion)
 
+
+progress = ttk.Progressbar(root, orient="horizontal",length=200,mode="determinate")
 root.mainloop()

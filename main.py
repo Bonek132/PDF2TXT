@@ -21,9 +21,26 @@ def choose_directory():
     output_dir.set(directory)
 
 def start_conversion():
-    pass
-
-# main window
+    try:
+        pd_path = selected_file.get()
+        if not pdf_path:
+            messagebox.showerror("Error","PDF file not selected")
+            return
+        if not output_file.get():
+            raise ValueError("output file name cannot be empty")
+        output_dir_patch = output_dir.get()
+        
+        if not output_dir_patch:
+            messagebox.showerror("Error","No output directory selected")
+    except Exception as e:
+        messagebox.showerror("Error",str(e))
+    
+#
+#
+# MAIN WINDOW
+#
+#
+#
 root = TkinterDnD.Tk()
 root.title("PDF converter")
 root.geometry("500x270")

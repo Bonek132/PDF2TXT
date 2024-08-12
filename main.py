@@ -9,6 +9,8 @@ from docx.shared import Pt
 from docx.enum.text import WD_ALIGN_PARAGRAPH
 from docx.oxml.ns import qn
 from docx.oxml import OxmlElement
+import openpyxl
+from openpyxl import Workbook
 
 def open_file():
     filepath = filedialog.askopenfilename(filetypes=[("PDF files","*.pdf"), ("All Files","*.*")])
@@ -130,11 +132,15 @@ def start_conversion_xlsx():
         
         progress['value'] = 0
         output_path = os.path.join(output_dir_path, f"{output_file.get()}.xlsx")
-        with open(pdf_path, "rb") as pdf_file:
-            reader = PdfReader(pdf_file)
-            total_pages = len(reader.pages)
-            
-            with open(output_path, "w", encoding="utf-8") as text_file:
+        try:
+            with open(pdf_path, "rb") as pdf_file:
+                reader = PdfReader(pdf_file)
+                total_pages = len(reader.pages)
+                
+                workbook = Workbook()
+                sheet = workbook.active
+                row_index = 1  # Początkowy indeks wiersza w arkuszu
+                
                 for i, page in enumerate(reader.pages):
                     progress["value"] = ((i + 1) / total_pages) * 100
                     root.update_idletasks()
@@ -142,15 +148,26 @@ def start_conversion_xlsx():
                     text = page.extract_text()
                     
                     if text:
-                        text_file.write(f"Page {i + 1}\n{'=' * 20}\n")
-                        text_file.write(text)
-                        text_file.write("\n\n")
-        
-        messagebox.showinfo("Success", "File converted successfully!")
-        
+                        lines = text.splitlines()
+                        for line in lines:
+                            cleaned_line = line.strip()  
+                            if cleaned_line:  
+                                sheet.cell(row=row_index, column=1, value=cleaned_line)
+                                row_index += 1
+                    
+                        
+                        row_index += 1
+                
+                workbook.save(output_path)
+                
+            messagebox.showinfo("Success", "File converted successfully!")
+            
+        except Exception as internal_error:
+           
+            messagebox.showerror("Internal Error", f"An error occurred during the conversion process: {str(internal_error)}")
+    
     except Exception as e:
-        messagebox.showerror("Error", str(e))
-
+        messagebox.showerror("Error", f"An error occurred: {str(e)}")
 
 # MAIN WINDOW
 
@@ -165,27 +182,27 @@ output_dir = tk.StringVar()
 output_file = tk.StringVar()
 selected_file = tk.StringVar()
 
-tk.Label(root, text="Output directory").pack(pady=5)  # Zwiększony odstęp pionowy-
-tk.Entry(root, textvariable=output_dir).pack(padx=10, pady=5)  # Zwiększone odstępy poziome i pionowe
-tk.Button(root, text="Browse", command=choose_directory).pack(pady=5)  # Zwiększony odstęp pionowy
+tk.Label(root, text="Output directory").pack(pady=5) 
+tk.Entry(root, textvariable=output_dir).pack(padx=10, pady=5)  
+tk.Button(root, text="Browse", command=choose_directory).pack(pady=5)  
 
-tk.Label(root, text="Output file name").pack(pady=5)  # Zwiększony odstęp pionowy
-tk.Entry(root, textvariable=output_file).pack(padx=10, pady=5)  # Zwiększone odstępy poziome i pionowe
+tk.Label(root, text="Output file name").pack(pady=5)  
+tk.Entry(root, textvariable=output_file).pack(padx=10, pady=5)  
 
-tk.Label(root, text="Select or drop PDF file").pack(pady=5)  # Zwiększony odstęp pionowy
-tk.Entry(root, textvariable=selected_file, state="readonly").pack(padx=10, pady=5)  # Zwiększone odstępy poziome i pionowe
+tk.Label(root, text="Select or drop PDF file").pack(pady=5) 
+tk.Entry(root, textvariable=selected_file, state="readonly").pack(padx=10, pady=5)  
 
 open_button = tk.Button(root, text="Open PDF", command=open_file)
-open_button.pack(pady=5)  # Zwiększony odstęp pionowy
+open_button.pack(pady=5) 
 
 convert_button_pdf = tk.Button(root, text="Convert txt", command=start_conversion_pdf)
 convert_button_docx = tk.Button(root, text="Convert docx", command=start_conversion_docx)
-convert_button_xslx = tk.Button(root, text="Convert xlsx", command=start_conversion_xlsx)
+#convert_button_xslx = tk.Button(root, text="Convert xlsx", command=start_conversion_xlsx)
 convert_button_pdf.pack(pady=5) 
-convert_button_docx.pack(padx=5) 
-convert_button_xslx.pack(padx=5) # Zwiększony odstęp pionowy
+convert_button_docx.pack(padx=5, pady=0) 
+#convert_button_xslx.pack(padx=5) # Zwiększony odstęp pionowy
 
 progress = ttk.Progressbar(root, orient="horizontal", length=200, mode="determinate")
-progress.pack(pady=10)  # Zwiększony odstęp pionowy
+progress.pack(pady=10) 
 
 root.mainloop()
